@@ -12,12 +12,12 @@
 #define ADC_FLAG_INJECTED       2
 #define ADC_FLAG_ERROR          4
 
-#define ADC_CONVERSION_FREQUENCY        20             // in Hz
+#define ADC_CONVERSION_FREQUENCY        100             // in Hz
 #define ADC_TIM                         TIM2
 #define ADC_GPIO_MONITOR_PIN            GPIO_Pin_1      //output triggering PWM signal to this pin for debugging (TIM2_CH2). Pin A0 in Arduino connector
 #define ADC_GPIO_MONITOR_PIN_SRC        GPIO_PinSource1
 
-
+#define ADC_MAX 0xFFF
 
 typedef struct {
   uint16_t adc_value;       
@@ -27,7 +27,19 @@ typedef struct {
   OS_FLAG_GRP* adc_flags;
 } ADC_ResultType;
 
+
+
 void hw_adc_timer_init(void);
 void hw_adc_init(void);
+
+#ifdef __cplusplus
+  extern "C" {
+#endif 
+   
+    void ADCIrqHandler(void);
+    
+#ifdef __cplusplus
+  }
+#endif     
 
 #endif /* __ADC_H */

@@ -5,6 +5,16 @@
  */
 #include <stdint.h>
 
+#ifdef __cplusplus
+  extern "C" {
+#endif  
+
+void InitializeDataSection(void);
+
+#ifdef __cplusplus
+  }
+#endif  
+
 /*
  * a pragma is a compiler specific extension
  *  This pragma section extension is used to tell the linker the sections used in this file
@@ -27,9 +37,9 @@ void InitializeDataSection(void)
      ** section_begin is an IAR helper to get information about sections. The linker
      **  populates the correct data
      **/
-    uint8_t*   pInitDataSource = __section_begin(".data_init");
-    uint8_t*   pInitDataTarget = __section_begin(".data");
-    uint8_t*   pInitDataEnd    = __section_end(".data_init");
+    uint8_t*   pInitDataSource = (uint8_t*)__section_begin(".data_init");
+    uint8_t*   pInitDataTarget = (uint8_t*)__section_begin(".data");
+    uint8_t*   pInitDataEnd    = (uint8_t*)__section_end(".data_init");
       
     /* Figure out how much data to copy */
     uint32_t    size = pInitDataEnd - pInitDataSource;
@@ -40,10 +50,11 @@ void InitializeDataSection(void)
     }   
     
     /* Zero initialized section is called bss, give it the same treatment */
-    uint8_t* pZeroInit = __section_begin(".bss");
-    uint8_t* pZeroInitEnd = __section_end(".bss");
+    uint8_t* pZeroInit = (uint8_t*)__section_begin(".bss");
+    uint8_t* pZeroInitEnd = (uint8_t*)__section_end(".bss");
     size = pZeroInitEnd - pZeroInit;
     while (size--) {
       *pZeroInit++ = 0;
     }       
 }
+

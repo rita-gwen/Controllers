@@ -29,6 +29,8 @@ typedef struct {
   uint16_t ic_raw_count_prev;       
   uint16_t ic_error_flag;
   uint32_t ic_timestamp;       //timestamp of the last input capture (interrupt call)
+  uint32_t ic_sum;              //variables to accumulate and average the reading 
+  uint16_t ic_count;
   OS_FLAG_GRP* ic_flags;
 } MSREAD_ResultType;
 
@@ -36,5 +38,17 @@ typedef struct {
 void hw_ic_tim_init(void);
 void hw_pwm_tim_init(void);
 void SetMotorCommand(uint16_t pwm_duty);
+
+#ifdef __cplusplus
+  extern "C" {
+#endif 
+   
+void TIM3IrqHandler(void);
+
+#ifdef __cplusplus
+  }
+#endif 
+   
+
 
 #endif /* __TIM_H */

@@ -5,7 +5,6 @@ ADC_ResultType pot_data_struct;
 
 ADC_ResultType *pot_data = &pot_data_struct;
 
-
 //ADC interrupt handler
 void ADCIrqHandler(void){
     OS_CPU_SR  cpu_sr;
@@ -28,6 +27,7 @@ void ADCIrqHandler(void){
 
     OSIntExit();                                                /* Tell uC/OS-II that we are leaving the ISR            */
 }
+
 
 // Initialize the timer to trigger ADC conversions
 void hw_adc_timer_init(void){

@@ -2,8 +2,8 @@
 #define __BSP_H
 
 // Add interfaces to the specific hardware for use by application code
-#include <os_cpu.h>
-#include <os_cfg.h>
+//#include <os_cpu.h>
+//#include <os_cfg.h>
 #include <app_cfg.h>
 #include <ucos_ii.h>
 
@@ -13,8 +13,10 @@
 #include "adc.h"
 #include "tim.h"
 #include "uart.h"
+#include "controller.h"
 
 #define ARM_MATH_CM4
+#define LAB3
 
 
 void SetLED(BOOLEAN On);

@@ -21,12 +21,10 @@ History:
 
 #include "bsp.h"
 #include "print.h"
-#include "controller.h"
 #include "arm_math.h"
 
 #define BUFSIZE 150
-#define LAB1
-#define GUI_UPDATE_FREQ         1       //relative to the reporting loop frequency. 2 means every other iteration
+#define GUI_UPDATE_FREQ         5       //relative to the reporting loop frequency. 2 means every other iteration
 
 
 /************************************************************************************
@@ -54,6 +52,7 @@ void getProcessData();
 void printProcessData();
 void packProcessData();
 void unpackData(void);
+uint16_t controller(void);
 
 OS_EVENT * semPrint;
 
@@ -64,11 +63,8 @@ extern USART_ReceiveBufferType * receive_buffer;
 extern USART_TransmitBufferType* transmit_buffer;
 
 //allocate memory for the process and controller data
-ProcessDataStructType proc_data;
-ControllerDataStructType cntr_data;
-
-uint32_t        ic_sum =0;
-uint16_t        ic_count = 0;
+extern ProcessDataStructType proc_data;
+extern ControllerDataStructType cntr_data;
 
 #ifdef LAB1
 char* config_message = "&A~Desired~5&C&S~K_P~P~0~10~0.05&S~Direct~O~0~260~0.01&S~Desired~A~0~260~1&T~MotorSpeed~U1~0~260&T~Error~S1~-150~150&T~MotorCmd~U1~0~260&H~2&";
@@ -106,33 +102,30 @@ void StartupTask(void* pdata)
     transmit_buffer->trans_semaphore = OSSemCreate(1);
     pot_data->adc_flags = OSFlagCreate((OS_FLAGS)(0x00), &err);
     motor_data->ic_flags = OSFlagCreate((OS_FLAGS)(0x00), &err);
+    motor_data->ic_sum =0;
+    motor_data->ic_count = 0;    
 
+    initController();
 
-    char buf[BUFSIZE];
-    printWithBuf(buf, BUFSIZE, "StartupTask: Begin\n");
-    printWithBuf(buf, BUFSIZE, "StartupTask: Starting timer tick\n");
+    //char buf[BUFSIZE];
+    //printWithBuf(buf, BUFSIZE, "StartupTask: Begin\n");
+    //printWithBuf(buf, BUFSIZE, "StartupTask: Starting timer tick\n");
 
     // Start the system tick
     SysTick_Config(CLOCK_HSI / OS_TICKS_PER_SEC);
 
-    printWithBuf(buf, BUFSIZE, "StartupTask: Creating application tasks\n");
+    //printWithBuf(buf, BUFSIZE, "StartupTask: Creating application tasks\n");
     
-    //initialize controller data
-    cntr_data.direct = 0.0f;
-    cntr_data.feedback_rate = 0.0f;
-    cntr_data.set_point = 0.0f;
-    cntr_data.first_time = 1;
-
 
     // The maximum of tasks the application can have is defined by OS_MAX_TASKS in os_cfg.h
     INT8U pri = APP_TASK_START_PRIO + 1;
-    OSTaskCreate(TaskController, (void*)0, (void*)&TaskControllerStk[APP_CFG_TASK_START_STK_SIZE-1], pri++);
-    OSTaskCreate(TaskComm, (void*)0, (void*)&TaskCommStk[APP_CFG_TASK_START_STK_SIZE-1], pri++);
-    OSTaskCreate(TaskSpeedData, (void*)0, (void*)&TaskSpeedDataStk[APP_CFG_TASK_START_STK_SIZE-1], pri++);
+    OSTaskCreate(TaskController, (void*)0, &TaskControllerStk[APP_CFG_TASK_START_STK_SIZE-1], pri++);
+    OSTaskCreate(TaskComm, (void*)0, &TaskCommStk[APP_CFG_TASK_START_STK_SIZE-1], pri++);
+    OSTaskCreate(TaskSpeedData, (void*)0, &TaskSpeedDataStk[APP_CFG_TASK_START_STK_SIZE-1], pri++);
     
 
     // Delete ourselves, letting the work be done in the new tasks.
-    printWithBuf(buf, BUFSIZE, "StartupTask: deleting self\n");
+    //printWithBuf(buf, BUFSIZE, "StartupTask: deleting self\n");
     OSTaskDel(OS_PRIO_SELF);
 }
 
@@ -153,7 +146,7 @@ void TaskController(void* pdata)
       //The loop is synchronized by the pot ADC event. It updates the motor command and other data
       //transmits the data to the host (maybe every other iteration or less and waits for the next ADC event.
         if(cntr_data.first_time)
-          USART_Print("%s\n\r", config_message);
+          USART_Print("%s\n\r", config_message);        //TODO: Add start and end markers [] so that the server can verify message integrity.
       
         OSFlagPend(pot_data->adc_flags, ADC_FLAG_REGULAR, OS_FLAG_WAIT_SET_ANY, 0, &err);
         OSFlagPost(pot_data->adc_flags, ADC_FLAG_REGULAR, OS_FLAG_CLR, &err);
@@ -161,7 +154,7 @@ void TaskController(void* pdata)
         
         if(!cntr_data.first_time)
         {
-          getProcessData();
+          cntr_getProcessData();
           //printProcessData();
           packProcessData();
           if(++loop_count == GUI_UPDATE_FREQ)
@@ -171,8 +164,6 @@ void TaskController(void* pdata)
             loop_count = 0;
           }
           
-          //update motor
-          SetMotorCommand(proc_data.motor_cmd<<1);
         }
     }
     
@@ -224,8 +215,8 @@ void TaskSpeedData(void* data)
         OSFlagPost(motor_data->ic_flags, MSREAD_FLAG_REGULAR, OS_FLAG_CLR, &err);
         if(motor_data->ic_value > 16)   //ignore too short counts
         {
-          ic_sum += motor_data->ic_value;
-          ic_count++;
+          motor_data->ic_sum += motor_data->ic_value;
+          motor_data->ic_count++;
         }
     }
 }
@@ -297,73 +288,43 @@ void packProcessData()
   
   char* ptr = transmit_buffer->buffer;
   *ptr = (char)0;               //start byte
-  ptr++;
 #ifdef  LAB1            // packing sequence should be redefined for each lab according to the config string signature
+  ptr++;
   *ptr = floatToUByte(proc_data.motor_speed);
   ptr++;
   *ptr = floatToByte(proc_data.error_signal);
   ptr++;
   *ptr = floatToUByte(proc_data.motor_cmd);
   ptr++;
+#endif
+
+#ifdef  LAB3
+  ptr++;
+  *ptr = floatToByte(proc_data.pot_angle);
+  ptr++;
+  *ptr = floatToByte(proc_data.error_signal);
+
+  uint16_t deriv_ptr = floatToWord(proc_data.error_derivative);
+  ptr++;
+  *ptr = *((uint8_t*)&deriv_ptr);
+  ptr++;
+  *ptr = *(((uint8_t*)&deriv_ptr) + 1);
   
+  ptr++;
+  *ptr = floatToUByte(proc_data.motor_cmd);
+#endif
+
   uint16_t* hdr_ptr = &(proc_data.headroom);
+  ptr++;
   *ptr = *((uint8_t*)hdr_ptr);
   ptr++;
   *ptr = *((uint8_t*)hdr_ptr+1);
-#endif
   ptr++;
   *ptr = (uint8_t)0xFF;         //end byte
   
-  transmit_buffer->char_num = 7;
+  transmit_buffer->char_num = ptr - transmit_buffer->buffer + 1;
 }
 
-// collects and formats the process data and put it into the structure
-void getProcessData()
-{
-  //   motor speed statistics calculation
-  
-  float32_t  mean = 0;
-  proc_data.motor_speed = 0;
-  if(ic_count)
-  {
-    //6 spokes. Actual speed is up to 60 rps. Multiplying by 4 to scale it 
-    //to the reporting interval and for better precision.
-    mean = ((float)ic_sum)/((float)ic_count);
-    proc_data.motor_speed = CLOCK_HSI/MSREAD_COUNT_PRESCALER/((float)mean*6)*4;
-  }
-  //reset for the new cycle  
-  ic_count = 0;
-  ic_sum = 0;
-  
-  proc_data.error_signal = cntr_data.set_point - proc_data.motor_speed;
-  
-  /*
-  if(cntr_data.direct <= 0.)
-    proc_data.motor_cmd = 0;
-  else if(cntr_data.direct <= 250.)
-    proc_data.motor_cmd = ((uint16_t)round(cntr_data.direct))<<1;
-  else
-    proc_data.motor_cmd = 500;
-  */
-  float cmd = round(proc_data.error_signal * cntr_data.feedback_rate + cntr_data.direct);
-  if(cmd > MPWM_COUNT_PERIOD>>1)
-    proc_data.motor_cmd = MPWM_COUNT_PERIOD>>1;
-  else if(cmd > 0)
-    proc_data.motor_cmd = (uint16_t)cmd;
-  else 
-    proc_data.motor_cmd = 0;
-  
-  uint32_t period = CLOCK_HSI/ADC_CONVERSION_FREQUENCY;
-  proc_data.headroom = (uint16_t)round(1000.0f - (float)TIM_GetCounter(ADC_TIM)/(float)period * 1000.0f);
-  
-  /*
-  if(hdr/16 > 0x7FFF)
-    proc_data.headroom = 0x7FFF;
-  else
-    proc_data.headroom = (uint16_t)(hdr/16);
-  */
-  proc_data.pot_angle = pot_data->adc_value - 0x800;
-}
 
 void printProcessData(){
   USART_Print("Process Data: \n\r\tmotor_speed: %d \n\r\terror_signal: %d \n\r\t motor_cmd:: %d\n\r\theadroom:%d\n\r", proc_data.motor_speed, proc_data.error_signal, proc_data.motor_cmd, proc_data.headroom);

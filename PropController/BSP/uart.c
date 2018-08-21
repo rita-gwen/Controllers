@@ -3,6 +3,7 @@
 #include "bsp.h"
 #include <stdarg.h>
 #include <string.h>
+#include <stdio.h>
 
 //allocate initial USART buffer
 USART_ReceiveBufferType usart_receive_buffer_struct;

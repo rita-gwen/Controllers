@@ -39,5 +39,16 @@ void PrintByte(char c);
 void USART_StartTransmission();
 void USART_Print(char *format, ...);
 
+#ifdef __cplusplus
+  extern "C" {
+#endif 
+
+void USART2IrqHandler(void);
+
+#ifdef __cplusplus
+  }
+#endif 
+    
+
 
 #endif /* __UART_H */

@@ -35,6 +35,16 @@ uint8_t floatToByte(float num)
       return (uint8_t)round(num);
 }
 
+uint16_t floatToWord(float num)
+{
+    if(num > (float)0x7FFF)
+      return (uint16_t)0x7FFF;
+    if(num < -(float)0x8000)
+      return (uint16_t)0x8000;
+  
+    return (uint16_t)round(num);
+}
+
 float atofloat(char* str)
 {
   float sign;
