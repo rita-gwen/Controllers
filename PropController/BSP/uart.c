@@ -18,7 +18,6 @@ static char transmit_buffer_array[USART_BUFFER_LENGTH];
 // Initialize USART peripheral
 void hw_uart_init(void) {
 USART_InitTypeDef USART_InitStructure;
-   INT8U err;
 
   //initialize the buffer variables
   receive_buffer->buffer = usart_buffer_array;
@@ -92,8 +91,10 @@ void USART2IrqHandler(void){
         //receive interrupt, a characted was received
         if(receive_buffer->buffer_pointer == USART_BUFFER_LENGTH-1)     //reset the buffer pointer if we ran out of memory
           receive_buffer->buffer_pointer = 0;                         //to prevent corrupting other variables
+
         uint16_t i = ++(receive_buffer->buffer_pointer);              //increment the buffer pointer
         receive_buffer->buffer[i-1] = (char)USART_ReceiveData(COMM);    //move received data into the buffer
+
         if(receive_buffer->buffer[i-1] == receive_buffer->eol_char) {   //set a flag if we received EOL
           OSFlagPost(receive_buffer->usart_flags, USART_EOL_RECEIVED_FLAG, OS_FLAG_SET, &err);
           receive_buffer->buffer[i] = '\0';                             //add null line-terminator
@@ -146,8 +147,6 @@ void PrintByte(char c)
 
 void USART_StartTransmission()
 {
-    INT8U err;
-
     transmit_buffer->is_transmitted = 0;
     transmit_buffer->transmit_ptr = 0;
 

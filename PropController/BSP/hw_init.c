@@ -32,8 +32,7 @@ void Hw_init(void) {
   hw_system_clock();            // Clock up..
   hw_gpio_init();               // System I/O config
   hw_uart_init();               // USART config
-  hw_adc_timer_init();          // Init ADC trigger timer
-  hw_adc_init();                //ADC config
+
   hw_ic_tim_init();
   hw_pwm_tim_init();
   

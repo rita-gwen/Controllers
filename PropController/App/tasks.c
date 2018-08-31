@@ -24,7 +24,7 @@ History:
 #include "arm_math.h"
 
 #define BUFSIZE 150
-#define GUI_UPDATE_FREQ         5       //relative to the reporting loop frequency. 2 means every other iteration
+#define GUI_UPDATE_FREQ         50       //relative to the reporting loop frequency. 2 means every other iteration
 
 
 /************************************************************************************
@@ -56,7 +56,7 @@ uint16_t controller(void);
 
 OS_EVENT * semPrint;
 
-extern ADC_ResultType *pot_data;
+extern AngleSensor *angle_sensor;
 extern MSREAD_ResultType *motor_data;
 //USART buffers
 extern USART_ReceiveBufferType * receive_buffer;
@@ -100,10 +100,9 @@ void StartupTask(void* pdata)
     receive_buffer->usart_flags = OSFlagCreate((OS_FLAGS)(0x00), &err);
     receive_buffer->eol_char = '\n';
     transmit_buffer->trans_semaphore = OSSemCreate(1);
-    pot_data->adc_flags = OSFlagCreate((OS_FLAGS)(0x00), &err);
     motor_data->ic_flags = OSFlagCreate((OS_FLAGS)(0x00), &err);
     motor_data->ic_sum =0;
-    motor_data->ic_count = 0;    
+    motor_data->ic_count = 0; 
 
     initController();
 
@@ -113,6 +112,8 @@ void StartupTask(void* pdata)
 
     // Start the system tick
     SysTick_Config(CLOCK_HSI / OS_TICKS_PER_SEC);
+    angle_sensor->init_sensor(ADC_CONVERSION_FREQUENCY);
+    angle_sensor->start_sensor(ENABLE);     //start the ADC data flow
 
     //printWithBuf(buf, BUFSIZE, "StartupTask: Creating application tasks\n");
     
@@ -130,7 +131,7 @@ void StartupTask(void* pdata)
 }
 
 /************************************************************************************
-Controller loop task: monitors the inputs and updates the motor command
+Controller loop task: implements the controller logic and sends updates to the host.
 ************************************************************************************/
 
 void TaskController(void* pdata)
@@ -148,8 +149,7 @@ void TaskController(void* pdata)
         if(cntr_data.first_time)
           USART_Print("%s\n\r", config_message);        //TODO: Add start and end markers [] so that the server can verify message integrity.
       
-        OSFlagPend(pot_data->adc_flags, ADC_FLAG_REGULAR, OS_FLAG_WAIT_SET_ANY, 0, &err);
-        OSFlagPost(pot_data->adc_flags, ADC_FLAG_REGULAR, OS_FLAG_CLR, &err);
+        angle_sensor->read_angle();
         //SetPin(TEST_PIN1, 1);
         
         if(!cntr_data.first_time)

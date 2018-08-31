@@ -50,6 +50,7 @@
       EXTERN  ADCIrqHandler
       EXTERN  TIM3IrqHandler
       EXTERN  USART2IrqHandler
+      EXTERN  ADCDMAIrqHandler
 
 ;   This indicates that the following is DATA, even though this is in a CODE section
 ;   The information is not executable, it is a list of pointers
@@ -73,48 +74,75 @@ __vector_table
       DCD       OS_CPU_SysTickHandler           ; SysTick
 
       ; The STM32F401 specific interrupt vectors  Follow
-      DCD     UnusedIrqHandler              ; WatchDog
-      DCD     UnusedIrqHandler              ; PVD through EXTI Line detection
-      DCD     UnusedIrqHandler              ; Tamper and TimeStamps through the EXTI line
-      DCD     UnusedIrqHandler              ; RTC Wakeup through the EXTI line
-      DCD     UnusedIrqHandler              ; Flash 
-      DCD     UnusedIrqHandler              ; RCC  - Clocks
-      DCD     EXTI0IrqHandler               ; EXTI Line0
-      DCD     EXTI1IrqHandler               ; EXTI Line1
-      DCD     EXTI2IrqHandler               ; EXTI Line2
-      DCD     EXTI3IrqHandler               ; EXTI Line3
-      DCD     EXTI4IrqHandler               ; EXTI Line4
+      DCD     UnusedIrqHandler              ; 0:  WatchDog
+      DCD     UnusedIrqHandler              ; 1:  PVD through EXTI Line detection
+      DCD     UnusedIrqHandler              ; 2:  Tamper and TimeStamps through the EXTI line
+      DCD     UnusedIrqHandler              ; 3:  RTC Wakeup through the EXTI line
+      DCD     UnusedIrqHandler              ; 4:  Flash 
+      DCD     UnusedIrqHandler              ; 5:  RCC  - Clocks
+      DCD     EXTI0IrqHandler               ; 6:  EXTI Line0
+      DCD     EXTI1IrqHandler               ; 7:  EXTI Line1
+      DCD     EXTI2IrqHandler               ; 8:  EXTI Line2
+      DCD     EXTI3IrqHandler               ; 9:  EXTI Line3
+      DCD     EXTI4IrqHandler               ; 10: EXTI Line4
       DCD     UnusedIrqHandler              ; DMA1 Stream 0
       DCD     UnusedIrqHandler              ; DMA1 Stream 1
       DCD     UnusedIrqHandler              ; DMA1 Stream 2
       DCD     UnusedIrqHandler              ; DMA1 Stream 3
-      DCD     UnusedIrqHandler              ; DMA1 Stream 4
+      DCD     UnusedIrqHandler              ; 15: DMA1 Stream 4
       DCD     UnusedIrqHandler              ; DMA1 Stream 5
       DCD     UnusedIrqHandler              ; DMA1 Stream 6
       DCD     ADCIrqHandler                 ; ADC1
       DCD     0
-      DCD     0
+      DCD     0                             ; 20: 
       DCD     0
       DCD     0
       DCD     EXTI5Thru9IrqHandler          ; EXTI Lines 5->9
       DCD     UnusedIrqHandler              ; TIM1 Break and TIM9
-      DCD     UnusedIrqHandler              ; TIM1 Update and TIM10
+      DCD     UnusedIrqHandler              ; 25: TIM1 Update and TIM10
       DCD     UnusedIrqHandler              ; TIM1 Trigger and Commutation and TIM11
       DCD     UnusedIrqHandler              ; TIM1 Capture Compare
       DCD     UnusedIrqHandler              ; TIM2
-      DCD     TIM3IrqHandler              ; TIM3
-      DCD     UnusedIrqHandler              ; TIM4
+      DCD     TIM3IrqHandler                ; TIM3
+      DCD     UnusedIrqHandler              ; 30: TIM4
       DCD     UnusedIrqHandler              ; I2C1 Event
       DCD     UnusedIrqHandler              ; I2C1 Error
       DCD     UnusedIrqHandler              ; I2C2 Event
       DCD     UnusedIrqHandler              ; I2C2 Error
-      DCD     UnusedIrqHandler              ; SPI1
+      DCD     UnusedIrqHandler              ; 35: SPI1
       DCD     UnusedIrqHandler              ; SPI2
       DCD     UnusedIrqHandler              ; USART1
       DCD     USART2IrqHandler              ; USART2
       DCD     0
-      DCD     EXTI10Thru15IrqHandler        ; EXTI Lines 10 -> 15
-     
+      DCD     EXTI10Thru15IrqHandler        ; 40: EXTI Lines 10 -> 15
+      DCD     UnusedIrqHandler              ; 
+      DCD     UnusedIrqHandler              ; 
+      DCD     UnusedIrqHandler              ; 
+      DCD     UnusedIrqHandler              ; 
+      DCD     UnusedIrqHandler              ; 45:
+      DCD     UnusedIrqHandler              ; 
+      DCD     UnusedIrqHandler              ; DMA1 Stream7 
+      DCD     0              ; 
+      DCD     UnusedIrqHandler              ; SDIO
+      DCD     UnusedIrqHandler              ; 50: TIM5
+      DCD     UnusedIrqHandler              ; SPI3
+      DCD     0                             ; 
+      DCD     0                             ; 
+      DCD     0                             ; 
+      DCD     0                             ; 55: 
+      DCD     ADCDMAIrqHandler              ; DMA2 Stream0
+      DCD     UnusedIrqHandler              ; DMA2 Stream1
+      DCD     UnusedIrqHandler              ; DMA2 Stream2
+      DCD     UnusedIrqHandler              ; DMA2 Stream3
+      DCD     UnusedIrqHandler              ; 60: DMA2 Stream4
+      DCD     0              ; 
+      DCD     0              ; 
+      DCD     0              ; 
+      DCD     0              ; 
+      DCD     0              ; 65: 
+      DCD     0              ; 
+      DCD     UnusedIrqHandler              ; USB on the Go
+      
       ; There are more IRQs that are not added here......
       
       

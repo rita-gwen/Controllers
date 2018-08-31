@@ -2329,6 +2329,9 @@
       </file>
     </group>
     <file>
+      <name>$PROJ_DIR$\App\controller.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\App\controller.h</name>
     </file>
     <file>
@@ -2385,6 +2388,12 @@
         </file>
         <file>
           <name>$PROJ_DIR$\BSP\ST\StdPeripheralDrivers\stm32f4xx_conf.h</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\BSP\ST\StdPeripheralDrivers\stm32f4xx_dma.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\BSP\ST\StdPeripheralDrivers\stm32f4xx_dma.h</name>
         </file>
         <file>
           <name>$PROJ_DIR$\BSP\ST\StdPeripheralDrivers\stm32f4xx_gpio.c</name>

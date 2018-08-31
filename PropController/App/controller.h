@@ -8,17 +8,26 @@
 
 #define ERROR_BUFF_SIZE         10
 
-#define ERROR_DELAY             3
+#define ERROR_DELAY             1
+
+class RingBuffer {
+  uint8_t buffer_index;
+  float ring_buffer_array[ERROR_BUFF_SIZE];
+public:
+  RingBuffer();
+  void push(float value);
+  float get(uint8_t offset = 0);
+};
+
 
 typedef struct{
     float motor_speed;
     float  error_signal;
     float  error_derivative;
     uint16_t  motor_cmd;
-    int16_t  pot_angle;
+    float  pot_angle;
     uint16_t headroom;
-    float* error_history;
-    uint8_t errhist_index;
+    RingBuffer error_buffer;
     float error_sum;
 } ProcessDataStructType;
 
@@ -47,8 +56,5 @@ uint16_t floatToWord(float num);
 void initController(void);
 void cntr_getProcessData();
 uint16_t cntr_control(void);
-
-void cntr_errhist_push(float err_value);
-float cntr_errhist_get(uint8_t offset);
 
 #endif

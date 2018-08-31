@@ -7,7 +7,7 @@ MSREAD_ResultType *motor_data = &motor_data_struct;
 
 void SetMotorCommand(uint16_t pwm_duty){
     if(pwm_duty <= MPWM_COUNT_PERIOD)
-      TIM_SetCompare1(MPWM_TIM, (uint32_t)pwm_duty);
+      TIM_SetCompare3(MPWM_TIM, (uint32_t)pwm_duty);
 }
 
 
@@ -99,7 +99,7 @@ void hw_pwm_tim_init(void){
     GPIO_Init(MPWM_GPIO_PORT, &GPIO_InitStructure);
     GPIO_PinAFConfig(MPWM_GPIO_PORT, MPWM_GPIO_PIN_SRC, GPIO_AF_TIM5);
   
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);        //start TIM5 clock
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);        //start TIM5 clock
     //initialize timebase
     TIM_TimeBaseInitTypeDef TIM_BaseInitStruct;
     TIM_TimeBaseStructInit(&TIM_BaseInitStruct);
@@ -118,8 +118,8 @@ void hw_pwm_tim_init(void){
     TIM_OCInitStruct.TIM_Pulse = 0x2;                   //start low
     TIM_OCInitStruct.TIM_OCPolarity = TIM_OCPolarity_Low;
 
-    TIM_OC1Init(MPWM_TIM, &TIM_OCInitStruct);
-    TIM_OC1PreloadConfig(MPWM_TIM, TIM_OCPreload_Enable);       //allows for updating duty cycle on the fly
+    TIM_OC3Init(MPWM_TIM, &TIM_OCInitStruct);
+    TIM_OC3PreloadConfig(MPWM_TIM, TIM_OCPreload_Enable);       //allows for updating duty cycle on the fly
     
     TIM_Cmd(MPWM_TIM, ENABLE);    
 }

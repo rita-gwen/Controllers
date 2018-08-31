@@ -324,6 +324,7 @@
           <state>$PROJ_DIR$\App\uCOS</state>
           <state>$PROJ_DIR$\Micrium\Software\uCOS-II\Source</state>
           <state>$PROJ_DIR$\Micrium\Software\uCOS-II\ARM-Cortex-M4\IAR</state>
+          <state>$PROJ_DIR$\App</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -378,7 +379,7 @@
         </option>
         <option>
           <name>IccLang</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>IccCDialect</name>
@@ -1944,6 +1945,9 @@
       </file>
     </group>
     <file>
+      <name>$PROJ_DIR$\App\controller.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\App\controller.h</name>
     </file>
     <file>
@@ -2000,6 +2004,12 @@
         </file>
         <file>
           <name>$PROJ_DIR$\BSP\ST\StdPeripheralDrivers\stm32f4xx_conf.h</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\BSP\ST\StdPeripheralDrivers\stm32f4xx_dma.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\BSP\ST\StdPeripheralDrivers\stm32f4xx_dma.h</name>
         </file>
         <file>
           <name>$PROJ_DIR$\BSP\ST\StdPeripheralDrivers\stm32f4xx_gpio.c</name>

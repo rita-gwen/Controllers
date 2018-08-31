@@ -5,10 +5,39 @@
 
 ProcessDataStructType proc_data;
 ControllerDataStructType cntr_data;
-static float error_buffer_array[ERROR_BUFF_SIZE];
 
-extern ADC_ResultType *pot_data;
+extern AngleSensor *angle_sensor;
 extern MSREAD_ResultType *motor_data;
+
+RingBuffer::RingBuffer(){
+    //make sure the array is initialized to zeros to avoid startup artefacts
+    for(uint8_t i = 0; i < ERROR_BUFF_SIZE; i++) ring_buffer_array[i] = 0;     
+    buffer_index = ERROR_BUFF_SIZE;
+}
+
+//adds new value to the buffer
+void RingBuffer::push(float value){
+  if(buffer_index >= ERROR_BUFF_SIZE)
+    buffer_index = 0;
+  else
+    buffer_index++;
+  ring_buffer_array[buffer_index] = value;
+}
+
+// Retrieves a value from the buffer at the given offset from the current value
+// If offset parameter is larger than ERROR_BUFF_SIZE retorns the earliest 
+// value (the most remote from the current one)
+float RingBuffer::get(uint8_t offset){
+  uint8_t idx;
+  if(offset >= ERROR_BUFF_SIZE)
+    offset = ERROR_BUFF_SIZE - 1;
+  if(offset <= buffer_index)
+    idx = buffer_index - offset;
+  else if(offset < ERROR_BUFF_SIZE)
+    idx = ERROR_BUFF_SIZE - (offset - buffer_index);
+
+  return ring_buffer_array[idx];
+}
 
 void initController(void)
 {
@@ -16,43 +45,14 @@ void initController(void)
     cntr_data.direct = 0.0f;
     cntr_data.feedback_rate = 0.0f;
     cntr_data.set_point = 0.0f;
-    cntr_data.first_time = 1;
-    
-    //initialize error buffer
-    proc_data.error_history = error_buffer_array;
-    //make sure the array is initialized to zeros to avoid startup artefacts
-    for(uint8_t i = 0; i < ERROR_BUFF_SIZE; i++) error_buffer_array[i] = 0;     
-    proc_data.errhist_index = ERROR_BUFF_SIZE;
-
+    cntr_data.first_time = 1;           //For DEBUG purposes only
+ 
+    proc_data.error_buffer = RingBuffer();
     proc_data.error_sum = 0.0f;
   
 }
 
-//adds new value to the buffer
-void cntr_errhist_push(float err_value)
-{
-  if(proc_data.errhist_index == ERROR_BUFF_SIZE)
-    proc_data.errhist_index = 0;
-  else
-    proc_data.errhist_index++;
-  proc_data.error_history[proc_data.errhist_index] = err_value;
-}
 
-// Retrieves a value from the buffer at the given offset from the current value
-// If offset parameter is larger than ERROR_BUFF_SIZE retorns the earliest 
-// value (the most remote from the current one)
-float cntr_errhist_get(uint8_t offset)
-{
-  uint8_t idx;
-  if(offset >= ERROR_BUFF_SIZE)
-    offset = ERROR_BUFF_SIZE - 1;
-  if(offset <= proc_data.errhist_index)
-    idx = proc_data.errhist_index - offset;
-  else if(offset < ERROR_BUFF_SIZE)
-    idx = ERROR_BUFF_SIZE - (offset - proc_data.errhist_index);
-
-  return proc_data.error_history[idx];
-}
 
 // collects and formats the process data and put it into the structure
 void cntr_getProcessData()
@@ -71,19 +71,19 @@ void cntr_getProcessData()
   motor_data->ic_count = 0;
   motor_data->ic_sum = 0;
   
-  proc_data.pot_angle = (int16_t)round(((float)pot_data->adc_value - POT_ZERO)/POT_READ_PER_DEGREE);
+  proc_data.pot_angle = angle_sensor->current_angle();;
 
 #ifdef LAB1
   proc_data.error_signal = cntr_data.set_point - proc_data.motor_speed;
 #endif
   
 #ifdef LAB3
-  proc_data.error_signal = cntr_data.set_point - (float)proc_data.pot_angle;
+  proc_data.error_signal = cntr_data.set_point - proc_data.pot_angle;
 #endif
 
-  cntr_errhist_push( proc_data.error_signal );          //push the current error into the buffer
+  proc_data.error_buffer.push( proc_data.error_signal );          //push the current error into the buffer
   
-  proc_data.error_derivative = (cntr_errhist_get(0) - cntr_errhist_get(ERROR_DELAY))*ADC_CONVERSION_FREQUENCY;
+  proc_data.error_derivative = (proc_data.error_buffer.get() - proc_data.error_buffer.get(ERROR_DELAY))*ADC_CONVERSION_FREQUENCY;
   
   uint32_t period = CLOCK_HSI/ADC_CONVERSION_FREQUENCY;
   proc_data.headroom = (uint16_t)round(1000.0f - (float)TIM_GetCounter(ADC_TIM)/(float)period * 1000.0f);

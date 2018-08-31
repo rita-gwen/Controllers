@@ -2,7 +2,7 @@
 #define __TIM_H
 
 
-// BP0 maps to TIM3_CH3, pin A3 on Arduino connector. Use for motor speed CC
+// PB0 maps to TIM3_CH3, pin A3 on Arduino connector. Use for motor speed CC
 
 // motor speed measurement peripherals
 #define MSREAD_GPIO_PORT        GPIOB
@@ -11,13 +11,13 @@
 #define MSREAD_TIM              TIM3
 
 // motor PWM (MPWM) output peripherals
-#define MPWM_TIM                TIM5
-#define MPWM_GPIO_PORT          GPIOA
-#define MPWM_GPIO_PIN           GPIO_Pin_0
-#define MPWM_GPIO_PIN_SRC       GPIO_PinSource0
+#define MPWM_TIM                TIM4            //channel 3
+#define MPWM_GPIO_PORT          GPIOB
+#define MPWM_GPIO_PIN           GPIO_Pin_8      //pin PB8 (D15)
+#define MPWM_GPIO_PIN_SRC       GPIO_PinSource8
 
 
-#define MSREAD_COUNT_PRESCALER  1000            //prescaler for the timer clock to measure motor speed.
+#define MSREAD_COUNT_PRESCALER  1000       //prescaler for the timer clock to measure motor speed.
 #define MPWM_COUNT_PRESCALER  5            //prescaler for the timer clock to generate motor PWM. Allows for duty cycle setting from 0 to 1000 
 #define MPWM_COUNT_PERIOD      500         //about 32kHz PWM frequency
 
