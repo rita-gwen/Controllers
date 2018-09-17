@@ -314,6 +314,28 @@ void packProcessData()
   *ptr = floatToUByte(proc_data.motor_cmd);
 #endif
 
+#ifdef  LAB4
+  ptr++;
+  *ptr = floatToByte(proc_data.pot_angle);
+  ptr++;
+  *ptr = floatToByte(proc_data.error_signal);
+
+  uint16_t deriv_ptr = floatToWord(proc_data.error_derivative);
+  ptr++;
+  *ptr = *((uint8_t*)&deriv_ptr);
+  ptr++;
+  *ptr = *(((uint8_t*)&deriv_ptr) + 1);
+  
+  uint16_t sum_ptr = floatToWord(proc_data.error_sum);
+  ptr++;
+  *ptr = *((uint8_t*)&sum_ptr);
+  ptr++;
+  *ptr = *(((uint8_t*)&sum_ptr) + 1);
+  
+  ptr++;
+  *ptr = floatToUByte(proc_data.motor_cmd);
+#endif
+  
   uint16_t* hdr_ptr = &(proc_data.headroom);
   ptr++;
   *ptr = *((uint8_t*)hdr_ptr);

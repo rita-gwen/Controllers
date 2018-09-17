@@ -16,7 +16,7 @@
 #include "controller.h"
 
 #define ARM_MATH_CM4
-#define LAB3
+#define LAB4
 
 
 void SetLED(BOOLEAN On);

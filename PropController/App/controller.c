@@ -17,10 +17,9 @@ RingBuffer::RingBuffer(){
 
 //adds new value to the buffer
 void RingBuffer::push(float value){
+  buffer_index++;
   if(buffer_index >= ERROR_BUFF_SIZE)
     buffer_index = 0;
-  else
-    buffer_index++;
   ring_buffer_array[buffer_index] = value;
 }
 
@@ -80,10 +79,17 @@ void cntr_getProcessData()
 #ifdef LAB3
   proc_data.error_signal = cntr_data.set_point - proc_data.pot_angle;
 #endif
+#ifdef LAB4
+  proc_data.error_signal = cntr_data.set_point - proc_data.pot_angle;
+#endif
 
   proc_data.error_buffer.push( proc_data.error_signal );          //push the current error into the buffer
   
   proc_data.error_derivative = (proc_data.error_buffer.get() - proc_data.error_buffer.get(ERROR_DELAY))*ADC_CONVERSION_FREQUENCY;
+  
+  proc_data.error_sum += proc_data.error_signal/((float)ADC_CONVERSION_FREQUENCY);
+  if(proc_data.error_sum < -cntr_data.sum_max) proc_data.error_sum = -cntr_data.sum_max;
+  if(proc_data.error_sum > cntr_data.sum_max) proc_data.error_sum = cntr_data.sum_max;
   
   uint32_t period = CLOCK_HSI/ADC_CONVERSION_FREQUENCY;
   proc_data.headroom = (uint16_t)round(1000.0f - (float)TIM_GetCounter(ADC_TIM)/(float)period * 1000.0f);
@@ -95,7 +101,12 @@ void cntr_getProcessData()
 // process and controller data
 uint16_t cntr_control(void)
 {
-  float cmd = round(proc_data.error_signal * cntr_data.feedback_rate + proc_data.error_derivative * cntr_data.deriv_rate + cntr_data.direct);
+  float cmd = round(
+                        proc_data.error_signal * cntr_data.feedback_rate 
+                      + proc_data.error_derivative * cntr_data.deriv_rate 
+                      + proc_data.error_sum * cntr_data.integral_rate
+                      + cntr_data.direct);
+  
   uint16_t pwm_cmd = 0;
   if((int16_t)cmd > MPWM_COUNT_PERIOD>>1)
     pwm_cmd = MPWM_COUNT_PERIOD>>1;
